@@ -1,0 +1,82 @@
+{{block "index" .}}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="https://unpkg.com/htmx.org@1.9.11" integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0" crossorigin="anonymous"></script>
+        <title>Teleme Recommendation Engine</title>
+        <script src="https://cdn.tailwindcss.com"></script></script>
+    </head>
+    <body class="bg-gray-100  p-4">
+        <h1 class="text-center text-3xl">Teleme Recommendation Engine</h1>
+        {{template "form" .FormData}}
+        <p id="indicator" class="htmx-indicator flex flex-row justify-center">Fetching Recommendations...</p>
+        {{template "recommendations" .Data}}
+    </body>
+    <script>
+        document.addEventListener("DOMContentLoaded", (event) => {
+            document.body.addEventListener('htmx:beforeSwap', function(evt){
+                if (evt.detail.xhr.status == 422) {
+                    evt.detail.shouldSwap = true;
+                    evt.detail.isError = false;
+                }
+            })
+        })
+        function sendSelectedValue() {
+            var selectElement = document.getElementById("limitSelect");
+            var selectedValue = selectElement.options[selectElement.selectedIndex].value;
+            document.getElementById("hiddenInputField").value = selectedValue;
+        }
+    </script>
+</html>
+{{end}}
+
+{{block "form" .}}
+<form class="text-center p-8 flex justify-center" hx-swap="outerHTML" hx-indicator="#indicator" hx-post="/recommend">
+    <div class="flex flex-col">
+        <div class="flex flex-row gap-x-4">
+            <input class="rounded-lg px-16  py-2" {{if .Values.query}} value="{{.Values.query}}" {{end}} type="text" id="query" name="query" placeholder="Type  something..." />
+            <select class="rounded-lg px-2 py-2"  id="limitSelect" name="limit">
+                {{range $index, $value := .LimitOptions}}
+                <option value="{{$value}}" {{if eq $index 0}}selected{{end}}>{{$value}}</option>
+                {{end}}
+            </select>
+
+
+            <button type="submit" class="py-1 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                Submit 
+            </button>
+        </div>
+        {{ if .Errors.query }}
+        <div class="text-red p-2">{{.Errors.query}}</div>
+        {{end}}
+    </div>
+</form>
+{{end}}
+
+{{ block "recommendations" .}}
+<div class="flex p-2 flex-row justify-center">
+    <div class="flex flex-col gap-y-2">
+        <table class="table-fixed max-h-lg" id="rec-table" hx-swap-oob="innerHTML">
+            {{ if ne (len .Recommendations) 0 }}
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            {{end}}
+            <tbody>
+                {{range .Recommendations}}
+                <tr>
+                    <td class="max-width-[40px] pr-4">{{.Name}}</td>
+                    <td class="pr-4">{{.Price}}</td>
+                    <td>{{.Score}}</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div> 
+</div>
+{{end}}
