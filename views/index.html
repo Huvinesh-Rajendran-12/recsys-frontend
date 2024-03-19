@@ -11,7 +11,7 @@
         <h1 class="text-center text-3xl">Teleme Recommendation Engine</h1>
         {{template "form" .FormData}}
         <p id="indicator" class="htmx-indicator flex flex-row justify-center">Fetching Recommendations...</p>
-        {{template "recommendations" .Data}}
+        {{template "recommendation_container" .Data}}
     </body>
     <script>
         document.addEventListener("DOMContentLoaded", (event) => {
@@ -54,29 +54,34 @@
 </form>
 {{end}}
 
-{{ block "recommendations" .}}
+{{block "recommendation_container" .}}
 <div class="flex p-2 flex-row justify-center">
     <div class="flex flex-col gap-y-2">
-        <table class="table-fixed max-h-lg" id="rec-table" hx-swap-oob="innerHTML">
-            {{ if ne (len .Recommendations) 0 }}
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Price</th>
-                    <th>Score</th>
-                </tr>
-            </thead>
-            {{end}}
-            <tbody>
-                {{range .Recommendations}}
-                <tr>
-                    <td class="max-width-[40px] pr-4">{{.Name}}</td>
-                    <td class="pr-4">{{.Price}}</td>
-                    <td>{{.Score}}</td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
-    </div> 
+        {{template "recommendations" .}}
+    </div>
 </div>
+{{end}}
+
+
+{{ block "recommendations" .}}
+<table class="table-fixed max-h-lg" id="rec-table" hx-swap-oob="innerHTML">
+    {{ if ne (len .Recommendations) 0 }}
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Score</th>
+        </tr>
+    </thead>
+    {{end}}
+    <tbody class="rec-table-body">
+        {{range .Recommendations}}
+        <tr>
+            <td class="max-width-[40px] pr-4">{{.Name}}</td>
+            <td class="pr-4">{{.Price}}</td>
+            <td>{{.Score}}</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
 {{end}}

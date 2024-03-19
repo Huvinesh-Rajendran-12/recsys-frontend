@@ -84,6 +84,8 @@ func getRecommendations(query string, limit int) []Recommendation {
         return []Recommendation{}
     }
     defer resp.Body.Close()
+    // read the response body
+    
 
     // Decode JSON response
     var recommendations []Recommendation
