@@ -12,7 +12,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
     "log"
     "github.com/joho/godotenv"
-    "net/url"
 )
 
 type Templates struct {
@@ -21,6 +20,7 @@ type Templates struct {
 
 type Recommendation struct {
     Name string `json:"name"`
+    Description string `json:"description"`
     Price string `json:"price"`
     Score float64 `json:"score"`
 }
@@ -67,7 +67,7 @@ func initPage() *Page {
     } 
 }
 
-func getRecommendations(query string, limit int) []Recommendation {
+func getRecommendations(userId int, limit int) []Recommendation {
     err := godotenv.Load() // Load .env file
     if err != nil {
         log.Fatal(err)
@@ -75,7 +75,7 @@ func getRecommendations(query string, limit int) []Recommendation {
 
     // Access environment variables
     uri := os.Getenv("URI")
-    url := fmt.Sprintf("%s?query=%s&limit=%d", uri, query, limit)
+    url := fmt.Sprintf("%s?userId=%d&limit=%d", uri, userId, limit)
     fmt.Println(url)
     // connect to api
     resp, err := http.Get(url)
@@ -118,20 +118,18 @@ func main(){
     })
 
     e.POST("/recommend", func(c echo.Context) error {
-        query := c.FormValue("query")
-        if query == ""{
+        userId , err := strconv.Atoi(c.FormValue("userId"))
+        if err != nil {
             formData := newFormData()
-            formData.Errors["query"] = "Query cannot be empty"
+            formData.Errors["userId"] = "User ID cannot be empty"
             return c.Render(422, "form", formData)
         }
-        encodedQuery := url.QueryEscape(query)
-        limitStr := c.FormValue("limit")
-        if limitStr == "" {
+        limit , err:= strconv.Atoi(c.FormValue("limit"))
+        if err !=  nil {
             formData := newFormData()
             return c.Render(400, "form", formData)
         }
-        limit, _ := strconv.Atoi(limitStr)
-        recommendations := getRecommendations(encodedQuery, limit)
+        recommendations := getRecommendations(userId, limit)
         fmt.Println(recommendations)
         fmt.Println(len(recommendations))
         if len(recommendations) == 0 {

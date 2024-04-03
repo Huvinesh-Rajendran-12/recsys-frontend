@@ -35,7 +35,7 @@
 <form class="text-center p-8 flex justify-center" hx-swap="outerHTML" hx-indicator="#indicator" hx-post="/recommend">
     <div class="flex flex-col">
         <div class="flex flex-row gap-x-4">
-            <input class="rounded-lg px-16  py-2" {{if .Values.query}} value="{{.Values.query}}" {{end}} type="text" id="query" name="query" placeholder="Type  something..." />
+            <input class="rounded-lg px-16  py-2" {{if .Values.userId }} value="{{.Values.userId}}" {{end}} type="text" id="userId" name="userId" placeholder="Type User Id" />
             <select class="rounded-lg px-2 py-2"  id="limitSelect" name="limit">
                 {{range $index, $value := .LimitOptions}}
                 <option value="{{$value}}" {{if eq $index 0}}selected{{end}}>{{$value}}</option>
@@ -47,8 +47,8 @@
                 Submit 
             </button>
         </div>
-        {{ if .Errors.query }}
-        <div class="text-red p-2">{{.Errors.query}}</div>
+        {{ if .Errors.userId}}
+        <div class="text-red p-2">{{.Errors.userId}}</div>
         {{end}}
     </div>
 </form>
@@ -69,6 +69,7 @@
     <thead>
         <tr>
             <th>Name</th>
+            <th>Description</th>
             <th>Price</th>
             <th>Score</th>
         </tr>
@@ -78,6 +79,7 @@
         {{range .Recommendations}}
         <tr>
             <td class="max-width-[40px] pr-4">{{.Name}}</td>
+            <td class="pr-4">{{.Description}}</td>
             <td class="pr-4">{{.Price}}</td>
             <td>{{.Score}}</td>
         </tr>
