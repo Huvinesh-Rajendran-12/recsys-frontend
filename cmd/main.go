@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
     "log"
     "github.com/joho/godotenv"
+    "net/url"
 )
 
 type Templates struct {
@@ -67,15 +68,17 @@ func initPage() *Page {
     } 
 }
 
-func getRecommendations(userId int, limit int) []Recommendation {
+func getRecommendations(query string, userId int, limit int) []Recommendation {
     err := godotenv.Load() // Load .env file
     if err != nil {
         log.Fatal(err)
     }
 
     // Access environment variables
+    queryStr := url.QueryEscape(query)
+    fmt.Println(queryStr)
     uri := os.Getenv("URI")
-    url := fmt.Sprintf("%s?userId=%d&limit=%d", uri, userId, limit)
+    url := fmt.Sprintf("%s?query=%s&userId=%d&limit=%d", uri, queryStr, userId, limit)
     fmt.Println(url)
     // connect to api
     resp, err := http.Get(url)
@@ -118,6 +121,7 @@ func main(){
     })
 
     e.POST("/recommend", func(c echo.Context) error {
+        query := c.FormValue("query")
         userId , err := strconv.Atoi(c.FormValue("userId"))
         if err != nil {
             formData := newFormData()
@@ -129,7 +133,7 @@ func main(){
             formData := newFormData()
             return c.Render(400, "form", formData)
         }
-        recommendations := getRecommendations(userId, limit)
+        recommendations := getRecommendations(query, userId, limit)
         fmt.Println(recommendations)
         fmt.Println(len(recommendations))
         if len(recommendations) == 0 {
