@@ -1,0 +1,96 @@
+{{block "productPage" .}}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="https://unpkg.com/htmx.org@1.9.11" integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0" crossorigin="anonymous"></script>
+        <title>Product Admin Page</title>
+        <script src="https://cdn.tailwindcss.com"></script></script>
+    </head>
+    <body class="bg-gray-100  p-4">
+        <h1 class="text-center text-3xl">Product Admin Page</h1>
+        {{template "productForm" .FormData}}
+        <p id="indicator" class="htmx-indicator flex flex-row justify-center">Loding Products...</p>
+        {{template "product_container" .Data}}
+    </body>
+    <script>
+        document.addEventListener("DOMContentLoaded", (event) => {
+            document.body.addEventListener('htmx:beforeSwap', function(evt){
+                if (evt.detail.xhr.status == 422) {
+                    evt.detail.shouldSwap = true;
+                    evt.detail.isError = false;
+                }
+            })
+        })
+    </script>
+</html>
+{{end}}
+
+{{block "productForm" .}}
+<form class="text-center p-8 flex justify-center" hx-swap="outerHTML" hx-indicator="#indicator" hx-post="/products/add">
+    <div class="flex flex-col">
+        <div class="flex flex-row gap-x-4">
+            <input class="rounded-lg px-16  py-2" {{if .Values.name }} value="{{.Values.name }}" {{end}} type="text" id="name" name="name" placeholder="Type name..." />
+            <input class="rounded-lg px-8 py-2" {{if .Values.description }} value="{{.Values.description }}" {{end}} type="text" id="description" name="description" placeholder="Type product description..." />
+            <input class="rounded-lg px-8 py-2" {{if .Values.price }} value="{{.Values.price }}" {{end}} type="text" id="price" name="price" placeholder="Type product price..." />
+            <input class="rounded-lg px-8 py-2" {{if .Values.allergen }} value="{{.Values.allergen }}" {{end}} type="text" id="allergens" name="allergens" placeholder="Type product allergen..." />
+            <input class="rounded-lg px-8 py-2" {{if .Values.gender }} value="{{.Values.gender }}" {{end}} type="text" id="gender" name="gender" placeholder="Type product gender..." />
+
+            <button type="submit" class="py-1 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                Submit 
+            </button>
+        </div>
+        {{ if .Errors.name }}
+        <div class="text-red p-2">{{.Errors.name}}</div>
+        {{end}}
+        {{ if .Errors.description}}
+        <div class="text-red p-2">{{.Errors.description}}</div>
+        {{end}}
+        {{ if .Errors.price }}
+        <div class="text-red p-2">{{.Errors.price}}</div>
+        {{end}}
+        {{ if .Errors.description}}
+        <div class="text-red p-2">{{.Errors.allergen}}</div>
+        {{end}}
+        {{ if .Errors.description}}
+        <div class="text-red p-2">{{.Errors.gender}}</div>
+        {{end}}
+    </div>
+</form>
+{{end}}
+
+{{block "product_container" .}}
+<div class="flex p-2 flex-row justify-center">
+    <div class="flex flex-col gap-y-2">
+        {{template "products" .}}
+    </div>
+</div>
+{{end}}
+
+
+{{ block "products" .}}
+<table class="table-fixed max-h-lg" id="prod-table" hx-swap-oob="innerHTML">
+    {{ if ne (len .Products) 0 }}
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Allergen</th>
+            <th>Gender</th>
+        </tr>
+    </thead>
+    {{end}}
+    <tbody class="prod-table-body">
+        {{range .Products}}
+        <tr>
+            <td class="max-width-[40px] pr-4">{{.Name}}</td>
+            <td class="pr-4">{{.Description}}</td>
+            <td class="pr-4">{{.Price}}</td>
+            <td class="pr-4">{{.Allergen}}</td>
+            <td class="pr-4">{{.Gender}}</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
+{{end}}
