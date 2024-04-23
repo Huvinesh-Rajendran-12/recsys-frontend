@@ -10,7 +10,8 @@
     <body class="bg-gray-100  p-4">
         <h1 class="text-center text-3xl">Product Admin Page</h1>
         {{template "productForm" .FormData}}
-        <p id="indicator" class="htmx-indicator flex flex-row justify-center">Loding Products...</p>
+        <p hidden id="indicator" class="htmx-indicator flex flex-row justify-center">Adding Product...</p>
+        <p hidden id="update-indicator" class="htmx-indicator flex flex-row justify-center">Updating Product...</p>
         {{template "product_container" .Data}}
     </body>
     <script>
@@ -83,13 +84,22 @@
     {{end}}
     <tbody class="prod-table-body">
         {{range .Products}}
-        <tr>
-            <td class="max-width-[40px] pr-4">{{.Name}}</td>
-            <td class="pr-4">{{.Description}}</td>
-            <td class="pr-4">{{.Price}}</td>
-            <td class="pr-4">{{.Allergen}}</td>
-            <td class="pr-4">{{.Gender}}</td>
-        </tr>
+            <form hx-indicator="#update-indicator" hx-put="product/edit">
+                 <tr>
+                    <td hidden><input hidden type="text" name="id" value={{.Id}}></td>
+                    <td class="pr-4"><input type="text" name="name" value={{.Name}} class="w-64"></td>
+                    <td class="pr-4"><input type="text" name="description" value={{.Description}} class="w-72"></td>
+                    <td class="pr-4"><input type="text" name="price" value={{.Price}}></td>
+                    <td class="pr-4"><input type="text" name="allergens" value={{.Allergen}}></td>
+                    <td class="pr-4"><input type="text" name="gender" value={{.Gender}}></td>
+                    <td>
+                        <button type="submit" id="editBtn" 
+                                class="py-1 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+                             Update 
+                        </button>
+                    </td>
+                </tr>
+            </form>
         {{end}}
     </tbody>
 </table>

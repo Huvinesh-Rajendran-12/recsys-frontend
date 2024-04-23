@@ -28,6 +28,7 @@ type Recommendation struct {
 }
 
 type Product struct {
+    Id int `json:"id"`
     Name string `json:"name"`
     Description string `json:"description"`
     Price string `json:"price"`
@@ -198,6 +199,25 @@ func addProductData(product Product) {
     defer resp.Body.Close()
 }
 
+func editProductData(product Product) {
+    err := godotenv.Load() // Load .env file
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    uri := os.Getenv("EDIT_PROD_URI")
+    url := fmt.Sprintf("%s", uri)
+    jsonBody , err := json.Marshal(product)
+    if err != nil {
+        log.Fatal(err)
+    }
+    resp, err := http.Post(url, "application/json", bytes.NewReader(jsonBody))
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer resp.Body.Close()
+}
+
 func NewTemplate() *Templates {
     return &Templates{
         templates: template.Must(template.ParseGlob("views/*.html")),
@@ -256,6 +276,28 @@ func main(){
             Gender: c.FormValue("gender"),
         }
         addProductData(product)
+        products := getProdData()
+        prodData := &ProductData{
+            Products: products, 
+            Product_count: len(products),
+        }
+        c.Render(200, "productForm", newProdFormData())
+        return c.Render(200, "products", prodData)
+    })
+    e.PUT("/product/edit", func(c echo.Context) error {
+        id , err := strconv.Atoi(c.FormValue("id"))
+        if err != nil {
+            log.Fatal(err)
+        }
+        product := Product{
+            Id: id,
+            Name: c.FormValue("name"),
+            Description: c.FormValue("description"),
+            Price: c.FormValue("price"),
+            Allergen: c.FormValue("allergens"),
+            Gender: c.FormValue("gender"),
+        }
+        editProductData(product)
         products := getProdData()
         prodData := &ProductData{
             Products: products, 
