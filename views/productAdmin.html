@@ -7,35 +7,33 @@
         <title>Product Admin Page</title>
         <script src="https://cdn.tailwindcss.com"></script></script>
     </head>
-    <body class="bg-gray-100  p-4">
-        <h1 class="text-center text-3xl">Product Admin Page</h1>
-        {{template "productForm" .FormData}}
-        <p hidden id="indicator" class="htmx-indicator flex flex-row justify-center">Adding Product...</p>
-        <p hidden id="update-indicator" class="htmx-indicator flex flex-row justify-center">Updating Product...</p>
-        {{template "product_container" .Data}}
+    <body class="bg-white-100"> 
+        {{ template "header" .}}
+        <main>
+        <div class="container mx-auto mt-10 p-6 rounded-lg shadow-md flex flex-col gap-4">
+            {{template "productForm" .FormData}}
+            <p hidden id="indicator" class="htmx-indicator flex flex-row justify-center text-sm text-gray-500 mt-2">Adding Product...</p>
+            <p hidden id="update-indicator" class="htmx-indicator flex flex-row justify-center text-sm text-gray-500 mt-2">Updating Product...</p>
+            {{template "product_container" .Data}}
+        </div>
+
+        </main>
+        <script>
+            // ... (your existing JavaScript code)
+        </script>
     </body>
-    <script>
-        document.addEventListener("DOMContentLoaded", (event) => {
-            document.body.addEventListener('htmx:beforeSwap', function(evt){
-                if (evt.detail.xhr.status == 422) {
-                    evt.detail.shouldSwap = true;
-                    evt.detail.isError = false;
-                }
-            })
-        })
-    </script>
 </html>
 {{end}}
 
 {{block "productForm" .}}
-<form class="text-center p-8 flex justify-center" hx-swap="outerHTML" hx-indicator="#indicator" hx-post="/products/add">
+<form class="text-center p-4 flex justify-center" hx-swap="outerHTML" hx-indicator="#indicator" hx-post="/products/add">
     <div class="flex flex-col">
         <div class="flex flex-row gap-x-4">
-            <input class="rounded-lg px-16  py-2" {{if .Values.name }} value="{{.Values.name }}" {{end}} type="text" id="name" name="name" placeholder="Type name..." />
-            <input class="rounded-lg px-8 py-2" {{if .Values.description }} value="{{.Values.description }}" {{end}} type="text" id="description" name="description" placeholder="Type product description..." />
-            <input class="rounded-lg px-8 py-2" {{if .Values.price }} value="{{.Values.price }}" {{end}} type="text" id="price" name="price" placeholder="Type product price..." />
-            <input class="rounded-lg px-8 py-2" {{if .Values.allergen }} value="{{.Values.allergen }}" {{end}} type="text" id="allergens" name="allergens" placeholder="Type product allergen..." />
-            <input class="rounded-lg px-8 py-2" {{if .Values.gender }} value="{{.Values.gender }}" {{end}} type="text" id="gender" name="gender" placeholder="Type product gender..." />
+            <input class="rounded-lg py-2" {{if .Values.name }} value="{{.Values.name }}" {{end}} type="text" id="name" name="name" placeholder="Type name..." />
+            <input class="rounded-lg py-2" {{if .Values.description }} value="{{.Values.description }}" {{end}} type="text" id="description" name="description" placeholder="Type product description..." />
+            <input class="rounded-lg py-2" {{if .Values.price }} value="{{.Values.price }}" {{end}} type="text" id="price" name="price" placeholder="Type product price..." />
+            <input class="rounded-lg py-2" {{if .Values.allergen }} value="{{.Values.allergen }}" {{end}} type="text" id="allergens" name="allergens" placeholder="Type product allergen..." />
+            <input class="rounded-lg py-2" {{if .Values.gender }} value="{{.Values.gender }}" {{end}} type="text" id="gender" name="gender" placeholder="Type product gender..." />
 
             <button type="submit" class="py-1 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
                 Submit 
@@ -61,46 +59,70 @@
 {{end}}
 
 {{block "product_container" .}}
-<div class="flex p-2 flex-row justify-center">
-    <div class="flex flex-col gap-y-2">
-        {{template "products" .}}
+<div class="mx-auto">
+    <div class="overflow-x-auto">
+        <table class="w-full table-auto bg-white shadow-md rounded-md divide-y divide-gray-200">
+            {{if ne (len .Products) 0}}
+            <thead class="bg-gray-200 text-white">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">Description</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">Price</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">Allergens</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">Gender</th>
+                    <th class="px-6 py-3"></th> 
+                </tr>
+            </thead>
+            {{end}}
+            <tbody class="prod-table-body">
+                {{range .Products}}
+                <tr id="product-row-{{.ID}}" class="border-b border-gray-200 py-2">
+                    <td class="px-6 py-4 text-left text-lg">{{.Name}}</td>
+                    <td class="px-6 py-4 text-left text-lg">{{.Description}}</td>
+                    <td class="px-6 py-4 text-left text-lg">{{.Price}}</td>
+                    <td class="px-6 py-4 text-left text-lg">{{.Allergens}}</td>
+                    <td class="px-6 py-4 text-left text-lg">{{.Gender}}</td>
+                    <td class="px-6 py-4">
+                        <button class="edit-product-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" 
+                            hx-get="/products/edit?id={{.ID}}" 
+                            hx-target="#product-row-{{.ID}}" 
+                            hx-swap="outerHTML">
+                            Edit
+                        </button>
+                    </td> 
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
     </div>
 </div>
 {{end}}
 
 
-{{ block "products" .}}
-<table class="table-fixed max-h-lg" id="prod-table" hx-swap-oob="innerHTML">
-    {{ if ne (len .Products) 0 }}
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Allergen</th>
-            <th>Gender</th>
-        </tr>
-    </thead>
-    {{end}}
-    <tbody class="prod-table-body">
-        {{range .Products}}
-            <form hx-indicator="#update-indicator" hx-put="product/edit">
-                 <tr>
-                    <td hidden><input hidden type="text" name="id" value={{.Id}}></td>
-                    <td class="pr-4"><input type="text" name="name" value={{.Name}} class="w-64"></td>
-                    <td class="pr-4"><input type="text" name="description" value={{.Description}} class="w-72"></td>
-                    <td class="pr-4"><input type="text" name="price" value={{.Price}}></td>
-                    <td class="pr-4"><input type="text" name="allergens" value={{.Allergen}}></td>
-                    <td class="pr-4"><input type="text" name="gender" value={{.Gender}}></td>
-                    <td>
-                        <button type="submit" id="editBtn" 
-                                class="py-1 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
-                             Update 
-                        </button>
-                    </td>
-                </tr>
-            </form>
-        {{end}}
-    </tbody>
-</table>
+{{ define "editableProductRow" }}
+<tr class="border-b border-gray-200 py-2">
+  <form hx-indicator="#update-indicator" hx-put="/products/edit" hx-target="this">
+    <input hidden type="text" name="id" value="{{.ID}}">
+    <td class="px-6 py-4 text-left text-lg">
+      <input type="text" name="name" value="{{.Name}}" class="w-64 rounded-md px-2 py-1 border focus:outline-none focus:ring focus:ring-blue-500">
+    </td>
+    <td class="px-6 py-4 text-left text-lg">
+      <input type="text" name="description" value="{{.Description}}" class="w-64 rounded-md px-2 py-1 border focus:outline-none focus:ring focus:ring-blue-500">
+    </td>
+    <td class="px-6 py-4 text-left text-lg">
+      <input type="text" name="price" value="{{.Price}}" class="w-64 rounded-md px-2 py-1 border focus:outline-none focus:ring focus:ring-blue-500">
+    </td>
+    <td class="px-6 py-4 text-left text-lg">
+      <input type="text" name="allergens" value="{{.Allergens}}" class="w-64 rounded-md px-2 py-1 border focus:outline-none focus:ring focus:ring-blue-500">
+    </td>
+    <td class="px-6 py-4 text-left text-lg">
+      <input type="text" name="gender" value="{{.Gender}}" class="w-64 rounded-md px-2 py-1 border focus:outline-none focus:ring focus:ring-blue-500">
+    </td>
+    <td class="px-6 py-4 text-left text-lg">
+      <button type="submit" id="editBtn" class="py-1 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
+        Update
+      </button>
+    </td>
+  </form>
+</tr>
 {{end}}

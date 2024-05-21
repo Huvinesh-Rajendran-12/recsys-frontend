@@ -5,18 +5,45 @@
         <meta charset="utf-8">
         <script src="https://unpkg.com/htmx.org@1.9.11" integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0" crossorigin="anonymous"></script>
         <title>Teleme Recommendation Engine</title>
-        <script src="https://cdn.tailwindcss.com"></script></script>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
     </head>
-    <body class="bg-gray-100  p-4">
-        <h1 class="text-center text-3xl">Teleme Recommendation Engine</h1>
-        {{template "form" .FormData}}
-        <p id="indicator" class="htmx-indicator flex flex-row justify-center">Fetching Recommendations...</p>
-        {{template "recommendation_container" .Data}}
+.htmx-indicator {
+    display: none;
+}
+            .htmx-request .htmx-indicator {
+                display: block;
+            }
+            .spinner {
+                border: 4px solid #f3f3f3;
+                border-top: 4px solid #3498db;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                animation: spin 2s linear infinite;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body class="bg-gray-100">
+        {{template "header" .}}
+        <main class="container mx-auto py-8">
+            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" hx-swap="outerHTML" hx-indicator="#indicator" hx-post="/recommend">
+                {{template "form" .FormData}}
+                <div id="indicator" class="htmx-indicator flex justify-center mb-8">
+                    <div class="spinner"></div>
+                </div>
+                {{template "recommendation_container" .Data}}
+            </div>
+        </main>
     </body>
     <script>
         document.addEventListener("DOMContentLoaded", (event) => {
             document.body.addEventListener('htmx:beforeSwap', function(evt){
-                if (evt.detail.xhr.status == 422) {
+                if (evt.detail.xhr.status == 400) {
                     evt.detail.shouldSwap = true;
                     evt.detail.isError = false;
                 }
@@ -27,67 +54,104 @@
             var selectedValue = selectElement.options[selectElement.selectedIndex].value;
             document.getElementById("hiddenInputField").value = selectedValue;
         }
+
+        const userDropdownButton = document.getElementById('user-dropdown-button');
+        const userDropdown = document.getElementById('user-dropdown');
+
+        userDropdownButton.addEventListener('click', () => {
+            userDropdown.classList.toggle('hidden');
+            userDropdownButton.setAttribute('aria-expanded', userDropdownButton.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+        });
     </script>
 </html>
 {{end}}
 
 {{block "form" .}}
-<form class="text-center p-8 flex justify-center" hx-swap="outerHTML" hx-indicator="#indicator" hx-post="/recommend">
-    <div class="flex flex-col">
-        <div class="flex flex-row gap-x-4">
-            <input class="rounded-lg px-16  py-2" {{if .Values.query }} value="{{.Values.query}}" {{end}} type="text" id="query" name="query" placeholder="Type query..." />
-            <input class="rounded-lg px-8 py-2" {{if .Values.userId }} value="{{.Values.userId}}" {{end}} type="text" id="userId" name="userId" placeholder="Type User Id" />
-            <select class="rounded-lg px-2 py-2"  id="limitSelect" name="limit">
-                {{range $index, $value := .LimitOptions}}
-                <option value="{{$value}}" {{if eq $index 0}}selected{{end}}>{{$value}}</option>
-                {{end}}
-            </select>
-
-
-            <button type="submit" class="py-1 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">
-                Submit 
-            </button>
-        </div>
-        {{ if .Errors.userId}}
-        <div class="text-red p-2">{{.Errors.userId}}</div>
-        {{end}}
+<form class="" hx-indicator="#indicator" hx-post="/recommend">
+    <div class="mb-4">
+        <label class="block text-gray-700 font-bold mb-2" for="query">
+            Query
+        </label>
+        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="query" name="query" type="text" placeholder="Type query..." {{if .Values.query }} value="{{.Values.query}}" {{end}}>
         {{ if .Errors.query}}
-        <div class="text-red p-2">{{.Errors.query}}</div>
+        <p class="text-red-500 text-xs italic">{{.Errors.query}}</p>
         {{end}}
+    </div>
+    <div class="mb-4">
+        <label class="block text-gray-700 font-bold mb-2" for="userId">
+            User ID
+        </label>
+        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="userId" name="userId" type="text" placeholder="Type User ID" {{if .Values.userId }} value="{{.Values.userId}}" {{end}}>
+        {{ if .Errors.userId}}
+        <p class="text-red-500 text-xs italic">{{.Errors.userId}}</p>
+        {{end}}
+    </div>
+    <div class="mb-4 flex items-center">
+        <label class="block text-gray-700 font-bold mr-2" for="affiliationSelect">
+            Affiliation
+        </label>
+        <select class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="affiliationSelect" name="affiliationId">
+            <option value=""></option> 
+            {{range .AffiliationOptions.Data}}
+            <option value="{{.ID}}">{{.Name}}</option>
+            {{end}}
+        </select>
+    </div>
+    <div class="mb-4 flex items-center">
+        <label class="block text-gray-700 font-bold mr-2" for="limitSelect">
+            Limit
+        </label>
+        <select class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="limitSelect" name="limit">
+            {{range $index, $value := .LimitOptions}}
+            <option value="{{$value}}" {{if eq $index 0}}selected{{end}}>{{$value}}</option>
+            {{end}}
+        </select>
+    </div>
+    <div class="flex items-center justify-end">
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" type="submit">
+            Submit
+        </button>
     </div>
 </form>
 {{end}}
 
 {{block "recommendation_container" .}}
-<div class="flex p-2 flex-row justify-center">
-    <div class="flex flex-col gap-y-2">
-        {{template "recommendations" .}}
-    </div>
+<div class="flex flex-col">
+    {{template "recommendations" .}}
 </div>
 {{end}}
 
-
-{{ block "recommendations" .}}
-<table class="table-fixed max-h-lg" id="rec-table" hx-swap-oob="innerHTML">
-    {{ if ne (len .Recommendations) 0 }}
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Score</th>
-        </tr>
-    </thead>
-    {{end}}
-    <tbody class="rec-table-body">
-        {{range .Recommendations}}
-        <tr>
-            <td class="max-width-[40px] pr-4">{{.Name}}</td>
-            <td class="pr-4">{{.Description}}</td>
-            <td class="pr-4">{{.Price}}</td>
-            <td>{{.Score}}</td>
-        </tr>
-        {{end}}
-    </tbody>
-</table>
-{{end}}
+{{ block "recommendations" . }}
+<div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200" id="rec-table" hx-swap-oob="outerHTML">
+        {{ if ne (len .Recommendations) 0 }}
+        <thead class="bg-gray-50">
+            <tr>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Price
+                </th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Score
+                </th>
+            </tr>
+        </thead>
+        {{ end }}
+        <tbody class="bg-white divide-y divide-gray-200">
+            {{ range .Recommendations }}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap">{{ .Name }}</td>
+                <td class="px-6 py-4">{{ .Description }}</td>
+                <td class="px-6 py-4">{{ .Price }}</td>
+                <td class="px-6 py-4">{{ .Score }}</td>
+            </tr>
+            {{ end }}
+        </tbody>
+    </table>
+</div>
+{{ end }}

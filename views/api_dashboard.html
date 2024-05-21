@@ -1,0 +1,122 @@
+{{block "apiDashboard" .}}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <title>Create API Credentials</title>
+         <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+         <script src="https://unpkg.com/htmx.org@1.9.11" integrity="sha384-0gxUXCCR8yv9FM2b+U3FDbsKthCI66oH5IA9fHppQq9DDMHuMauqq1ZHBpJxQ0J0" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
+    </head>
+    <body>
+        {{template "header" .}}
+
+        <div class="container mx-auto mt-10 p-6 rounded-lg shadow-md flex flex-col gap-8">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-semibold text-gray-800">API Credentials</h1>
+                   <button id="toggleFormButton" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">+ Create Credential</button>
+            </div>
+
+            <form id="credentialForm" class="hidden mb-4 flex flex-col gap-4" hx-post="/secrets/generate" hx-target="#credentialsTable" hx-boost="true">
+                <div class="flex items-center">
+                    <input type="text" name="title" placeholder="Title" class="px-4 py-2 border rounded flex-1 mr-2 focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex gap-x-2 justify-end">
+                    <button type="button" id="cancelFormButton" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Cancel</button> 
+                    <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Submit</button>
+                </div>
+            </form>
+            {{template "apiDashboardTable" .Secrets}}
+        </div>
+        <script>
+            document.getElementById('toggleFormButton').addEventListener('click', function() {
+                   document.getElementById('credentialForm').classList.toggle('hidden');
+                  });
+
+            document.getElementById('cancelFormButton').addEventListener('click', function() {
+                document.getElementById('credentialForm').classList.add('hidden');
+                // Optionally, you can clear the input field here if needed
+                document.getElementById('credentialForm').querySelector('input[name="title"]').value = '';
+            });
+            htmx.on("htmx:afterSwap", (event) => {
+                if (event.detail.target.id === "credentialsTable") {
+                    document.getElementById('credentialForm').classList.add('hidden'); 
+                    document.getElementById('credentialForm').querySelector('input[name="title"]').value = ''; 
+                }
+            });
+        </script>
+    </body>
+</html>
+{{end}}
+
+{{ define "apiDashboardTable" }}
+<div id="credentialsTable" class="overflow-auto rounded-lg shadow-md">
+    <table class="w-full table-auto">
+        <thead>
+            <tr>
+                <th class="px-6 py-3 bg-gray-200 text-left text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider">Title</th>
+                <th class="px-6 py-3 bg-gray-200 text-left text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider">Secret</th>
+                <th class="px-6 py-3 bg-gray-200 text-left text-xs leading-4 font-medium text-gray-700 uppercase tracking-wider">Secret ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .}}
+            <tr>
+                <td class="border px-6 py-4">{{.Title}}</td>
+                <td class="border px-6 py-4">
+                    <span class="hidden secret-value">{{.Secret}}</span>
+                    <button class="show-secret-btn px-2 py-1 bg-blue-500 text-white rounded">Show</button>
+                    <button class="copy-secret-btn px-2 py-1 bg-green-500 text-white rounded" data-clipboard-text="{{.Secret}}">Copy</button>
+                </td>
+                <td class="border px-6 py-4">
+                    <span class="hidden secretID-value">{{.SecretID}}</span>
+                    <button class="show-secretID-btn px-2 py-1 bg-blue-500 text-white rounded">Show</button>
+                    <button class="copy-secretID-btn px-2 py-1 bg-green-500 text-white rounded" data-clipboard-text="{{.SecretID}}">Copy</button>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+
+<script>
+  // Include clipboard.js script
+  // ... (clipboard.js code)
+    const showSecretButtons = document.querySelectorAll('.show-secret-btn');
+    showSecretButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const secretValue = button.previousElementSibling;
+            const copyButton = button.nextElementSibling;
+            secretValue.classList.toggle('hidden');
+            copyButton.classList.toggle('hidden');
+            button.textContent = secretValue.classList.contains('hidden') ? 'Show' : 'Hide'; 
+        });
+    });
+    
+    const showSecretIDButtons = document.querySelectorAll('.show-secretID-btn');
+    showSecretIDButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const secretIDValue = button.previousElementSibling;
+            const copyButton = button.nextElementSibling;
+            secretIDValue.classList.toggle('hidden');
+            copyButton.classList.toggle('hidden');
+            button.textContent = secretIDValue.classList.contains('hidden') ? 'Show' : 'Hide'; 
+        });
+    });
+  const clipboard = new ClipboardJS('.copy-secret-btn, .copy-secretID-btn');
+
+  clipboard.on('success', function(e) {
+      console.log('Copied:', e.text); // Add this line for debugging (optional)
+      // You can add any feedback (like a toast message) here if needed
+      e.clearSelection();
+  });
+
+  clipboard.on('error', function(e) {
+      console.error('Action:', e.action);
+      console.error('Trigger:', e.trigger);
+      // You can add error handling here
+  });
+</script>
+{{ end }}
+
