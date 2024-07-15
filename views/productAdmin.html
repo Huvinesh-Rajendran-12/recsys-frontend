@@ -28,7 +28,7 @@
 {{block "productForm" .}}
 <form class="text-center p-4 flex justify-center" hx-swap="outerHTML" hx-indicator="#indicator" hx-post="/products/add">
     <div class="flex flex-col">
-        <div class="flex flex-row gap-x-4">
+        <div class="flex flex-row gap-x-6">
             <input class="rounded-lg py-2" {{if .Values.name }} value="{{.Values.name }}" {{end}} type="text" id="name" name="name" placeholder="Type name..." />
             <input class="rounded-lg py-2" {{if .Values.description }} value="{{.Values.description }}" {{end}} type="text" id="description" name="description" placeholder="Type product description..." />
             <input class="rounded-lg py-2" {{if .Values.price }} value="{{.Values.price }}" {{end}} type="text" id="price" name="price" placeholder="Type product price..." />
@@ -70,7 +70,6 @@
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">Price</th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">Allergens</th>
                     <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">Gender</th>
-                    <th class="px-6 py-3"></th> 
                 </tr>
             </thead>
             {{end}}
@@ -82,14 +81,6 @@
                     <td class="px-6 py-4 text-left text-lg">{{.Price}}</td>
                     <td class="px-6 py-4 text-left text-lg">{{.Allergens}}</td>
                     <td class="px-6 py-4 text-left text-lg">{{.Gender}}</td>
-                    <td class="px-6 py-4">
-                        <button class="edit-product-btn bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" 
-                            hx-get="/products/edit?id={{.ID}}" 
-                            hx-target="#product-row-{{.ID}}" 
-                            hx-swap="outerHTML">
-                            Edit
-                        </button>
-                    </td> 
                 </tr>
                 {{end}}
             </tbody>
